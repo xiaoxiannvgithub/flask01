@@ -1,8 +1,9 @@
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 
+import pymysql
 from werkzeug.security import generate_password_hash, check_password_hash
-
+pymysql.install_as_MySQLdb()
 db = SQLAlchemy()
 
 
@@ -133,20 +134,26 @@ class UserInfo(db.Model, BaseModel):
         # 表示当使用user.users属性时，user表示作者，将user.id与关系表中的author_id匹配
         secondaryjoin=id == tb_user_author.c.author_id,
     )
+    #指定某个属性获取的方法user.password　　这个是读的功能
+    @property
+    def password(self):
+        #没有返回具体的字符串　，因为是加密的密码，返回来也看不懂
+        pass
+    #指定某个属性设置的方法use.password='123' 这个是设置装饰器的功能＇增减代码的可读性　　
+    @password.setter
+    def password(self,pwd):
+        self.password_hash=generate_password_hash(pwd)
 
-    # # 封装的密码属性get  user.password()==>user.password
-    # @property
-    # def password(self):
-    #     pass
-    #
-    # # 封装的密码属性set  ser.password(***)==>user.password=***，会调用如下方法
-    # @password.setter
-    # def password(self, pwd):
-    #     self.password_hash = generate_password_hash(pwd)
-    #
-    # # 对比密码
-    # def check_pwd(self, pwd):
-    #     return check_password_hash(self.password_hash, pwd)
+
+    # 对比密码
+    def check_pwd(self, pwd):
+        return check_password_hash(self.password_hash, pwd)
+
+
+    # def set_pwd(self,pwd):
+    #     self.password_hash=generate_password_hash(pwd)
+
+
 
 
 # 评论表
