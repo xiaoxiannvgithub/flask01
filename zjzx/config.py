@@ -22,6 +22,10 @@ class Config(object):
     # QINIU_SK = 'uOZfRdFtljIw7b8jr6iTG-cC6wY_-N19466PXUAb'
     # QINIU_BUCKET = 'itcast20171104'
     # QINIU_URL = 'http://oyvzbpqij.bkt.clouddn.com/'
+    #添加路径
+    UPLOAD_FILE_PATH=os.path.join(BASE_DIR,"static/avatar/")
+    #加入七牛的访问域名
+    QINIU_URL = 'http://oyvzbpqij.bkt.clouddn.com/'
 
 class DevelopConfig(Config):
     DEBUG = True

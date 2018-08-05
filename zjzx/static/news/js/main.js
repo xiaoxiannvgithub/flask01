@@ -127,7 +127,7 @@ $(function () {
                 $('.user_login').show();
                 $('.user_btns').hide();
                 //显示头像
-                $('.login_pic').attr('src','/static/news/images/'+data.avatar);
+                $('.lgin_pic').attr('src',data.avatar);
                 //显示昵称
                 $('#nick_name').html(data.nick_name);
             }

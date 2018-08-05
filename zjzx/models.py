@@ -1,3 +1,4 @@
+from flask import current_app
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 
@@ -81,7 +82,9 @@ class NewsInfo(db.Model, BaseModel):
     user_id = db.Column(db.Integer, db.ForeignKey('user_info.id'))
     # 新闻与评论为1对多，在新闻中定义关系属性
     comments = db.relationship('NewsComment', lazy='dynamic', order_by='NewsComment.id.desc()')
-
+    @property
+    def pic_url(self):
+       return current_app.config.get("QINIU_URL")+self.pic
 
 # 用户表
 class UserInfo(db.Model, BaseModel):
@@ -153,6 +156,9 @@ class UserInfo(db.Model, BaseModel):
     # def set_pwd(self,pwd):
     #     self.password_hash=generate_password_hash(pwd)
 
+    @property
+    def avatar_url(self):
+       return current_app.config.get("QINIU_URL")+self.avatar
 
 
 
