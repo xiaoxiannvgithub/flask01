@@ -7,6 +7,7 @@
 	<link rel="stylesheet" type="text/css" href="../../static/admin/css/main.css">
 	<link rel="stylesheet" href="../../static/admin/css/jquery.pagination.css">
 	<script type="text/javascript" src="../../static/admin/js/jquery-1.12.4.min.js"></script>
+    <script type="text/javascript" src="../../static/admin/js/vue.min.js"></script>
 	<script type="text/javascript" src="../../static/admin/js/jquery.pagination.min.js"></script>
 </head>
 <body>
@@ -26,114 +27,63 @@
 					<th width="5%">状态</th>
 					<th width="8%">管理操作</th>
 				</tr>
-				<tr>
-					<td>1</td>
-					<td class="tleft">日本史上最大IPO之一要来了：软银计划将手机业务分拆上市</td>
-					<td>2018-3-5 21:39:05</td>
-					<td>已通过</td>
-					<td>
+				<tr v-for="news in news_list">
+					<td>[[news.id]]</td>
+					<td class="tleft">[[news.title]]</td>
+					<td>[[news.create_time]]</td>
+					<td v-if="news.status==1">未审核</td>
+                    <td v-if="news.staus==2">已通过</td>
+                    <td v-if="news.staus==3">未通过</td>
+                    <td>
 						<a href="news_review_detail.html" class="review">审核</a>
 					</td>
 				</tr>
-				<tr>
-					<td>2</td>
-					<td class="tleft">日本史上最大IPO之一要来了：软银计划将手机业务分拆上市</td>
-					<td>2018-3-5 21:39:05</td>
-					<td>未通过</td>
-					<td>
-						<a href="news_review_detail.html" class="review">审核</a>
-					</td>
-				</tr>
-				<tr>
-					<td>3</td>
-					<td class="tleft">日本史上最大IPO之一要来了：软银计划将手机业务分拆上市</td>
-					<td>2018-3-5 21:39:05</td>
-					<td>未审核</td>
-					<td>
-						<a href="news_review_detail.html" class="review">审核</a>
-					</td>
-				</tr>
-				<tr>
-					<td>4</td>
-					<td class="tleft">日本史上最大IPO之一要来了：软银计划将手机业务分拆上市</td>
-					<td>2018-3-5 21:39:05</td>
-					<td>已通过</td>
-					<td>
-						<a href="news_review_detail.html" class="review">审核</a>
-					</td>
-				</tr>
-				<tr>
-					<td>5</td>
-					<td class="tleft">日本史上最大IPO之一要来了：软银计划将手机业务分拆上市</td>
-					<td>2018-3-5 21:39:05</td>
-					<td>未通过</td>
-					<td>
-						<a href="news_review_detail.html" class="review">审核</a>
-					</td>
-				</tr>
-				<tr>
-					<td>6</td>
-					<td class="tleft">日本史上最大IPO之一要来了：软银计划将手机业务分拆上市</td>
-					<td>2018-3-5 21:39:05</td>
-					<td>未审核</td>
-					<td>
-						<a href="news_review_detail.html" class="review">审核</a>
-					</td>
-				</tr>
-				<tr>
-					<td>7</td>
-					<td class="tleft">日本史上最大IPO之一要来了：软银计划将手机业务分拆上市</td>
-					<td>2018-3-5 21:39:05</td>
-					<td>已通过</td>
-					<td>
-						<a href="news_review_detail.html" class="review">审核</a>
-					</td>
-				</tr>
-				<tr>
-					<td>8</td>
-					<td class="tleft">日本史上最大IPO之一要来了：软银计划将手机业务分拆上市</td>
-					<td>2018-3-5 21:39:05</td>
-					<td>未通过</td>
-					<td>
-						<a href="news_review_detail.html" class="review">审核</a>
-					</td>
-				</tr>
-				<tr>
-					<td>9</td>
-					<td class="tleft">日本史上最大IPO之一要来了：软银计划将手机业务分拆上市</td>
-					<td>2018-3-5 21:39:05</td>
-					<td>未审核</td>
-					<td>
-						<a href="news_review_detail.html" class="review">审核</a>
-					</td>
-				</tr>
-				<tr>
-					<td>10</td>
-					<td class="tleft">日本史上最大IPO之一要来了：软银计划将手机业务分拆上市</td>
-					<td>2018-3-5 21:39:05</td>
-					<td>未审核</td>
-					<td>
-						<a href="news_review_detail.html" class="review">审核</a>
-					</td>
-				</tr>			
-			</table>
-		</div>
-
+            </table>
+        </div>
 		<div class="box">
 			<div id="pagination" class="page"></div>
 		</div>
 
         <script>
-			$(function() {
-				$("#pagination").pagination({
-					currentPage: 2,
-					totalPage: 3,
-					callback: function(current) {
-					    alert('ok!');
-					}
-				});
-			});
-		</script>
+			    $(function () {
+                    vue_common_table = new Vue({
+                        el: '.common_table',
+                        delimiters: ['[[', ']]'],
+                        data: {
+                            news_list: []
+                        }
+        });
+
+        loadnewslist(1, '');
+        //阻止表单提交
+        $('.news_filter_form').submit(function (e) {
+            e.preventDefault();
+            loadnewslist(1, $('.input_txt').val());
+        });
+    });
+    function loadnewslist(page,title) {
+        $.get('/admin/news_review2',{
+                    //谁调用这个函数，谁就传值
+                    'page':page,
+                    'title':title
+                },function (data) {
+                    //将数据显示在Vue中，在ajax中获取到数据，显示在vue中，
+                    vue_common_table.news_list=data.news_list;
+                    //生成页码链接
+                    $('#pagination').pagination({
+                        currentPage:page,
+                        totalPage:data.total_page,
+                        callback:function (current) {
+                            loadnewslist(current,$('.input_txt').val())
+                        }
+
+                    })
+                })
+            }
+
+
+
+        </script>
 
 	
 </body>

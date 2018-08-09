@@ -22,7 +22,8 @@ $(function () {
          if (data.result == 5) {
              $('.input_txt').html(new_password);
              alert('修改密码成功');
-         } else if (data.result == 2) {
+         }
+         else if (data.result == 2) {
              alert('请把数据填写完整');
          } else if (data.result == 3) {
              alert('密码不一致');

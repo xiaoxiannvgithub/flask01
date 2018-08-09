@@ -12,7 +12,7 @@ from utils.ytx_sdk import ytx_send
 import random
 from models import UserInfo, db, NewsInfo, NewsCategory
 from utils import qiniu_upload
-
+from datetime import datetime
 user_blueprint = Blueprint('user', __name__, url_prefix='/user')
 
 
@@ -103,7 +103,6 @@ def register():
     # password别装饰，调用password的属性会自动调用password.setting方法
     user.password = password
     # 保存到 数据库
-
     db.session.add(user)
     db.session.commit()
 
@@ -127,6 +126,23 @@ def login():
         return jsonify(result=2)
     # 如果查询到对象，密码是加过密的
     if user.check_pwd(password):
+
+        #修改用户的登录时间
+        now=datetime.now()
+        user.update_time=now
+        db.session.commit()
+
+        #将本小时的登录数量＋1
+        redis_cli=current_app.redis_cli
+        key='login'+now.strftime('%Y%m%d')
+        hour=now.hour  #08:00
+        if hour<8:
+            redis_cli.hincrby(key,'08:00',1)
+        elif hour>=18:
+            redis_cli.hincrby(key,'19:00',1)
+        else:
+            #当前登录时间为12:30　　则计为１３：００的登录数量+1
+            redis_cli.hincrby(key,'%02d:00'%(hour+1),1)
         # 状态保持．记录用户登录成功
         # 只有登录成功以后，字典里才会有这个值user.id
         # 看有没有登录过，就看session里面有没有这个user_id
@@ -155,7 +171,6 @@ def login_valid(view_fun):
         return view_fun(*args, **kwargs)
 
     return fun
-
 
 @user_blueprint.route('/logout')
 def logout():
@@ -282,6 +297,9 @@ def release():
     db.session.add(news)
     db.session.commit()
 
+    user=g.user
+    user.public_count+=1
+    db.session.commit()
     # 响应
     return redirect('/user/newslist')
 
@@ -315,23 +333,36 @@ def password():
     old_password=request.form.get('old_password')
     new_password = request.form.get('new_password')
     new_que_password=request.form.get('new_que_password')
-    if g.user.check_pwd(old_password):
+    if g.user.check_pwd(old_password):  #验证旧密码，在这调用check_pwd方法传入旧密码，就可以和数据库存的密码一样不一样
         session['user_id'] = g.user.id
+        pass
     else:
         # 密码错误
         return jsonify(result=1)
-    if not all([password,new_password]):
+    if not all([old_password,new_password,new_que_password]):
         return jsonify(result=2)
     if new_password !=new_que_password:
         return jsonify(result=3)
     if not re.match(r'^[0-9a-zA-Z]{6,20}$', new_password):
         return jsonify(result=4)
-    # 处理
+    # 处理  查询到这个用户再进行修改
     user=g.user
     user.password=new_password
     db.session.commit()
     # 响应
     return jsonify(result=5)
+#１＼密码修改本质是修改当前用户在数据库保存的密码，用post请求方式，
+# 所以先想到了flask中修改数据库操作语句，先查询对象，再修改属性，db.session.commit()
+#２＼这边是先用装饰器装饰了验证登录的代码，在修改密码的时候直接装饰就可以，装饰器要放在注册路由的后面，
+# 肯定是先获取路由规则，再装饰．
+#３＼想要修改，用ｇｅｔ请求方式．先获取到修改的页面，
+#４＼接收　　验证　　处理(先查询对象，再修改属性，db.session.commit() 　　响应返回json数据．
+#5\在ｈｔｍｌ中渲染获取的数据，把三个值的value都换成
+#需要ajax进行局部刷新，返回json数据，在ｊｓ里面对这些数据进行渲染，
 
+#需要注意的点：验证旧密码的时候，需要使用check＿pwd
+            #装饰器的装饰顺序
+#问题  ：在后台用户统计的 时候，想获取hash的值，老师添加了一个命令造了一些数据，获取到了时间和总数，但是总数是用random中生成的，在具体工作中怎么写这个总量，
+#问题：在关注作者视图那，粉丝怎么与关注同步，就是关注了以后粉丝就加１，而不是刷新以后才显示＋１
 
 
